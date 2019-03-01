@@ -37,43 +37,50 @@ mongoose.connect("mongodb://localhost/newArticles", { useNewUrlParser: true });
 // A GET route for scraping the echoJS website
 app.get("/scrape", function(req, res) {
     //  First, we grab the body of the html with axios
-    axios.get("https://medium.com/topic/technology").then(function(response) {
+    axios.get("https://www.fastcompany.com/technology").then(function(response) {
         // console.log(response)
         let $ = cheerio.load(response.data);
-        console.log($)
+        // console.log($)
         // // An empty array to save the data that we'll scrape
         let results = [];
-        let results2 = [];
+        // let results2 = [];
         // Select each element in the HTML body from which you want information.
         // NOTE: Cheerio selectors function similarly to jQuery's selectors,
         // but be sure to visit the package's npm page to see how it works
-        $("h3.ai").each(function(i, element) {
+        $("article.card--all-feed").each(function(i, element) {
       
-            let title = $(element).text();
-            let link = $(element).find("a").attr("href");
-            
+            let title = $(element).find("h2").text();
+            // let prefix = "fastcompany.com"
+            let link = "https://www.fastcompany.com" + $(element).find("a").attr("href");
+            // console.log(link)
+            let summary = $(element).find("h3").text();
             // Save these results in an object that we'll push into the results array we defined earlier
             results.push({
                 title: title,
-                link: link
+                link: link,
+                summary: summary
             });
 
             // Get the summary of the articles
-            $("p.bo").each(function(i, element){
-                let summary = $(element).find("a").text();
-                console.log(summary)
+            // $("p.bo").each(function(i, element){
+            //     let summary = $(element).find("a").text();
+            //     // console.log(summary)
 
-                // save the summary into the object
-                results2.push({
-                    summary: summary
-                });
-            });
+            //     // save the summary into the object
+            //     results[i] = {...results[i], summary};
+            //     console.log('RESULTS: ', results[i]);
+            //     // results.push()
+            //     // results[i]
+            //     // results2.push({
+            //     //     summary: summary
+            //     // });
+            // });
 
             // Create a new Article using the `result` object built from scraping
             db.Article.create(results)
             .then(function(dbArticle) {
                 // View the added result in the console
-                console.log(dbArticle);
+                // console.log(dbArticle);
             })
             .catch(function(err) {
                 // If an error occurred, log it
@@ -83,8 +90,8 @@ app.get("/scrape", function(req, res) {
         });
       
         // Log the results once you've looped through each of the elements found with cheerio
-        console.log(results);
-        console.log(results.length);
+        // console.log(results);
+        // console.log(results.length);
         // Send a message to the client
         res.send("Scrape Complete");    
     });
